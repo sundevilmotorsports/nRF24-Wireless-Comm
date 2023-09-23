@@ -1,4 +1,9 @@
 #include <Arduino.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+#include <FlexCAN_T4.h>
 
 // put function declarations here:
 int myFunction(int, int);
