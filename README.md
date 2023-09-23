@@ -2,5 +2,5 @@
 
 
 ## Spec Sheet
-![Spec Sheet](.Receiver/images/specsheet.png)
+![Spec Sheet](https://github.com/sundevilmotorsports/nRF24-Wireless-Comm/blob/main/Receiver/images/specsheet.png?raw=true)
 
