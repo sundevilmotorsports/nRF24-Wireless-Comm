@@ -1,5 +1,4 @@
 // RECEIVER CODE
-
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
@@ -13,6 +12,7 @@ int myFunction(int, int);
 void setup() {
   // put your setup code here, to run once:
   int result = myFunction(2, 3);
+  int testVariable = 123456789;
 }
 
 void loop() {
