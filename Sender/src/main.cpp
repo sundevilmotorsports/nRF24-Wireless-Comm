@@ -4,15 +4,15 @@
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
-#include <FlexCAN_T4-master>
+#include <FlexCAN_T4.h>
 #define CSE 7 
 #define CE 8
 // Constant Vars declared here
-const CANFD_message_t msg; // Message Struct
+const CAN_message_t msg; // Message Struct
 const byte address[6] = "00001"; // radio reciever address
 uint8_t mailBoxes = 10; // Amount of mail boxes in system
 RF24 radio(CE,CSE);// Radio object with CE,CSN pins given
-FlexCAN_T4FD<CAN3, RX_SIZE_32, TX_SIZE_32> CAN; // FlexCAN 
+FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> CAN; // initialize in can2.0 mode 
 // Function declarations:
 void readCAN(&msg); void transmitCAN(&msg);
 
@@ -21,21 +21,18 @@ void setup() {
   Wire.begin();
   // Baud Rate 
   Serial.begin(115200);
-  delay(400);
-  CANFD_timings_t config;
-	config.clock = CLK_24MHz;
-	config.baudrate = 1000000;
-	config.baudrateFD = 2000000;
-	config.propdelay = 190;
-	config.bus_length = 1;
-	config.sample = 70;
-	FD.setBaudRate(config);
+  delay(100);
+  
+  //set baud rate in can2.0
+  myCan.setBaudRate(1000000);
+
+
 	myCAN.enableMBInterrupts(); // CAN mailboxes are interrupt-driven, meaning it does stuff when a message appears
-  delay(500);
+  delay(100);
   // Radio Setup
   radio.begin();
   radio.openReadingPipe(address);
-  radio.setPALevel(RF24_PA_MIN);
+  radio.setPALevel(RF24_PA_MIN); //increase this to increase range
   radio.stopListening();
   CAN.onRecieve(transmitCAN); 
 }
