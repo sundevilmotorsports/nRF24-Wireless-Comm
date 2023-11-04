@@ -15,6 +15,7 @@ RF24 radio(CE,CSE);// Radio object with CE,CSN pins given
 FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> CAN; // initialize in can2.0 mode 
 // Function declarations:
 void readCAN(&msg); void transmitCAN(&msg);
+void testSend(); //temporary function to test sending-recieving without CAN.
 
 void setup() {
   // CAN Setup
@@ -31,20 +32,22 @@ void setup() {
   delay(100);
   // Radio Setup
   radio.begin();
-  radio.openReadingPipe(address);
+  radio.openSendingPipe(address);
   radio.setPALevel(RF24_PA_MIN); //increase this to increase range
   radio.stopListening();
   CAN.onRecieve(transmitCAN); 
 }
 
 void loop() {
-  CAN.events();
+  //CAN.events();
   //readCAN(); // for debug purposes
+
+  testSend();
 }
 
 // readsCAN
 void readCAN(&msg){
-  Serial.print("MB "); Serial.print(msg.mb);
+  Serial.print("MB: "); Serial.print(msg.mb);
   Serial.print(" ID: "); Serial.print(msg.id, HEX);
   for ( uint8_t i = 0; i < msg.len; i++ ) {
     Serial.print(msg.buf[i], HEX); Serial.print(" ");
@@ -54,4 +57,10 @@ void transmitCAN(&msg){
   uint8_t bufferData[32];
   memcpy(bufferData,&msg.buf,sizeof(bufferData));
   radio.write(&bufferData,sizeof(bufferData));
+}
+
+void testSend(&msg) {
+  const char text[] = "Hello World";
+  radio.write(&text, sizeof(text));
+  delay(500)
 }
