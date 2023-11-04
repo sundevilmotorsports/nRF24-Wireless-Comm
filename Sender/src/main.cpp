@@ -14,10 +14,11 @@ uint8_t mailBoxes = 10; // Amount of mail boxes in system
 RF24 radio(CE,CSE);// Radio object with CE,CSN pins given
 FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> CAN; // initialize in can2.0 mode 
 // Function declarations:
-void readCAN(&msg); void transmitCAN(&msg);
+//void readCAN(&msg); void transmitCAN(&msg);
 void testSend(); //temporary function to test sending-recieving without CAN.
 
 void setup() {
+  /*
   // CAN Setup
   Wire.begin();
   // Baud Rate 
@@ -30,12 +31,15 @@ void setup() {
 
 	myCAN.enableMBInterrupts(); // CAN mailboxes are interrupt-driven, meaning it does stuff when a message appears
   delay(100);
+  CAN.onRecieve(transmitCAN); 
+  */
+
+
   // Radio Setup
   radio.begin();
-  radio.openSendingPipe(address);
+  radio.openWritingPipe(address);
   radio.setPALevel(RF24_PA_MIN); //increase this to increase range
   radio.stopListening();
-  CAN.onRecieve(transmitCAN); 
 }
 
 void loop() {
@@ -45,7 +49,10 @@ void loop() {
   testSend();
 }
 
-// readsCAN
+/*
+These will be used once we set up the CAN bus.
+
+// reads CAN
 void readCAN(&msg){
   Serial.print("MB: "); Serial.print(msg.mb);
   Serial.print(" ID: "); Serial.print(msg.id, HEX);
@@ -58,9 +65,10 @@ void transmitCAN(&msg){
   memcpy(bufferData,&msg.buf,sizeof(bufferData));
   radio.write(&bufferData,sizeof(bufferData));
 }
+*/
 
-void testSend(&msg) {
+void testSend() {
   const char text[] = "Hello World";
   radio.write(&text, sizeof(text));
-  delay(500)
+  delay(500);
 }
