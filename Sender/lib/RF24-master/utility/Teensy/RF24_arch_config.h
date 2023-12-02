@@ -21,7 +21,7 @@
 typedef uint8_t rf24_gpio_pin_t;
 #define RF24_PIN_INVALID 0xFF
 
-#define printf Serial.printf
+//#define printf Serial.printf
 
 #ifdef SERIAL_DEBUG
     #define IF_SERIAL_DEBUG(x) ({ x; })

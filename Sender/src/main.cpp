@@ -5,19 +5,31 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 #include <FlexCAN_T4.h>
-#define CSE 7 
-#define CE 8
+#define CSE 37 
+#define CE 2
 // Constant Vars declared here
-const CAN_message_t msg; // Message Struct
 const byte address[6] = "00001"; // radio reciever address
 uint8_t mailBoxes = 10; // Amount of mail boxes in system
 RF24 radio(CE,CSE);// Radio object with CE,CSN pins given
-FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> CAN; // initialize in can2.0 mode 
+FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> myCan; // initialize in can2.0 mode 
 // Function declarations:
-//void readCAN(&msg); void transmitCAN(&msg);
-void testSend(); //temporary function to test sending-recieving without CAN.
+int count = 0;
+String str = String(count);
+char arr[] = "bruh";
+
+void testSend() {
+  const char text[] = "you suck";
+  radio.write(&text, sizeof(text));
+  count++;
+  str = String(count);
+  str.toCharArray(arr, sizeof(arr));
+  radio.write(&arr, sizeof(arr));
+  Serial.print("hello");
+  delay(500);
+}
 
 void setup() {
+
   /*
   // CAN Setup
   Wire.begin();
@@ -38,7 +50,7 @@ void setup() {
   // Radio Setup
   radio.begin();
   radio.openWritingPipe(address);
-  radio.setPALevel(RF24_PA_MIN); //increase this to increase range
+  radio.setPALevel(RF24_PA_MAX); //increase this to increase range
   radio.stopListening();
 }
 
@@ -67,8 +79,3 @@ void transmitCAN(&msg){
 }
 */
 
-void testSend() {
-  const char text[] = "Hello World";
-  radio.write(&text, sizeof(text));
-  delay(500);
-}
