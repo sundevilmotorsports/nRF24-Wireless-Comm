@@ -21,11 +21,11 @@ void testSend() {
   const char text[] = "you suck";
   radio.write(&text, sizeof(text));
   count++;
-  str = String(count);
-  str.toCharArray(arr, sizeof(arr));
   radio.write(&arr, sizeof(arr));
-  Serial.print("hello");
-  delay(500);
+  Serial.print(" ; hello ");
+  Serial.print(count);
+
+  delay(1000);
 }
 
 void setup() {
