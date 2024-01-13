@@ -19,6 +19,8 @@ GND
 
 ## Pinout for Teensy
 
+RF Transmitter ----> Teensy
+
 CE ----> 2
 
 CS ----> 37
