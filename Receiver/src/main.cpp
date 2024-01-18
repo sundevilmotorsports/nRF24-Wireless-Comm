@@ -8,6 +8,12 @@
 const byte address[6] = "00001"; // radio reciever address
 uint8_t mailBoxes = 10; // Amount of mail boxes in system
 RF24 radio(CE,CSE);// Radio object with CE,CSN pins given// put function declarations here:
+void sus(uint8_t message[32]);
+void brakes(uint8_t message[32]);
+void general(uint8_t message[32]);
+void MnM(uint8_t message[32]);
+void DAQ(uint8_t message[32]);
+
 
 
 void setup() {
@@ -31,28 +37,59 @@ void loop() {
     uint8_t text[32];
     radio.read(&text, sizeof(text));
     uint8_t ID = text[0];
-    int timestamp = text[1] << 24 | text[2] << 16 | text[3] << 8 | text[4];
-    uint8_t lap_no = text[5];
-    short avg_speed = text[6] << 8 | text[7];
-    int lat_gps = text[8] << 24 | text[9] << 16 | text[10] << 8 | text[11];
-    int lon_gps = text[12] << 24 | text[13] << 16 | text[14] << 8 | text[15];
-    short lat_g = text[16] << 8 | text[17];
-    short lon_g = text[18] << 8 | text[19];
+    Serial.print(String(ID) + ", ");
 
-    Serial.print(ID);
-    Serial.print(",");
-    Serial.print(timestamp);
-    Serial.print(",");
-    Serial.println(lap_no);
-    Serial.print(",");
-    Serial.print(avg_speed);
-    Serial.print(",");
-    Serial.print(lat_gps);
-    Serial.print(",");
-    Serial.print(lat_g);
-    Serial.print(",");
-    Serial.println(lon_g);
+    switch (ID){
+      case 0:
+        sus(text);
+        break;
+      case 1:
+        brakes(text);
+        break;
+      case 2:
+        general(text);
+        break;
+      case 3:
+        MnM(text);
+        break;
+      case 4:
+        DAQ(text);
+        break;
+    }
   }
-  delay(20);
 }
 
+void sus(uint8_t message[32]){
+  int timestamp = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
+  Serial.println("Sus " + String(timestamp));
+
+}
+
+void brakes(uint8_t message[32]){
+  int timestamp = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
+  Serial.println("Brakes " + String(timestamp));
+
+}
+
+void general(uint8_t message[32]) {
+  int timestamp = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
+  uint8_t lap_no = message[5];
+  short avg_speed = message[6] << 8 | message[7];
+  int lat_gps = message[8] << 24 | message[9] << 16 | message[10] << 8 | message[11];
+  int lon_gps = message[12] << 24 | message[13] << 16 | message[14] << 8 | message[15];
+  short lat_g = message[16] << 8 | message[17];
+  short lon_g = message[18] << 8 | message[19];
+
+  Serial.print(String(timestamp) + ", " + String(lap_no) + ", " + String(avg_speed) + ", " + 
+    String(lat_gps) + ", " + String(lon_gps) + ", " + String(lat_g) + ", " + String(lon_g) + "\n");
+}
+
+void MnM(uint8_t message[32]){
+  Serial.println("Max and Min ");
+
+}
+
+void DAQ(uint8_t message[32]){
+  int timestamp = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
+  Serial.println("DAQ " + String(timestamp));
+}

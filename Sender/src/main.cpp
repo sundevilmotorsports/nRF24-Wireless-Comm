@@ -24,17 +24,25 @@ int lon_gps;
 short lat_g;
 short lon_g;
 
+void testSendSus() {
+  pkt[0] = 0;
+  Serial.println(" ; hello Sus");
+}
+
+void testSendBrakes(){
+  pkt[0] = 1;
+  Serial.println(" ; hello Brakes");
+}
+
 //ID, TIMESTAMP, LAPNO, AVG_SPEED, LAT_GPS, LON_GPS, LAT_G, LON_G
-void testSend() {
-
-
+void testSendGeneral() {
   ave_speed = rand() % 101;
   lap_no = (timestamp / 240) + 1;
   lat_gps = rand() % 500 + 1000;
   lon_gps =  rand() % 500 + 1000;
   lat_g = rand() % 4 + 0;
   lon_g = rand() % 4 + 0; 
-  pkt[0] = 3;
+  pkt[0] = 2;
   pkt[1] = (timestamp & 0xFF000000) >> 24;
   pkt[2] = (timestamp & 0x00FF0000) >> 16;
   pkt[3] = (timestamp & 0x0000FF00) >> 8;
@@ -59,10 +67,20 @@ void testSend() {
   timestamp++;
   //radio.write(&arr, sizeof(arr));
   Serial.print(ave_speed);
-  Serial.print(" ; hello ");
+  Serial.print(" ; hello General ");
   Serial.println(timestamp);
 
   delay(1000);
+}
+
+void testSendMaxMin() {
+  pkt[0] = 3;
+  Serial.println(" ; hello MnM");
+}
+
+void testSendDAQ() {
+  pkt[0] = 4;
+  Serial.println(" ; hello DAQ");
 }
 
 void setup() {
@@ -94,8 +112,31 @@ void setup() {
 void loop() {
   //CAN.events();
   //readCAN(); // for debug purposes
+  short proto = rand() % 4;
 
-  testSend();
+  switch (proto){
+    case 0:
+      testSendSus();
+    case 1:
+      testSendBrakes();
+      break;
+    case 2:
+      testSendGeneral();
+      break;
+    case 3:
+      testSendMaxMin();
+      break;
+    case 4:
+      testSendDAQ();
+      break;    
+  }
+  
+
+  //unknown protocals
+    //testSendMaxMin();
+    //testSendSus();
+
+  delay(1000);
 }
 
 /*
