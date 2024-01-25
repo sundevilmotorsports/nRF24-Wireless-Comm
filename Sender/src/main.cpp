@@ -17,12 +17,6 @@ int timestamp = 0;
 String str = String(timestamp);
 char arr[] = "bruh";
 uint8_t pkt[32];
-short ave_speed;
-uint8_t lap_no;
-int lat_gps;
-int lon_gps;
-short lat_g;
-short lon_g;
 
 void testSendSus() {
   pkt[0] = 0;
@@ -32,24 +26,45 @@ void testSendSus() {
   pkt[4] = timestamp & 0x000000FF;
   Serial.println(" ; hello Sus");
 }
-
+//brake_pressure (00.000 (Bar)), brake temp (000.00 celsius)
+//ID, TIMESTAMP, FRONT_BRAKEPRESSURE, REAR_BRAKEPRESSURE, FL_BRAKE_TEMP, FR_BRAKE_TEMP, RR_BRAKE_TEMP, RL_BRAKE_TEMP
 void testSendBrakes(){
+  short front_pressure = rand() % 10001;
+  short rear_pressure = rand() % 10001;
+  short fr_temp = rand() % 24001 + 1000;
+  short fl_temp = rand() % 24001 + 1000;
+  short rr_temp = rand() % 24001 + 1000;
+  short rl_temp = rand() % 24001 + 1000;
   pkt[0] = 1;
   pkt[1] = (timestamp & 0xFF000000) >> 24;
   pkt[2] = (timestamp & 0x00FF0000) >> 16;
   pkt[3] = (timestamp & 0x0000FF00) >> 8;
   pkt[4] = timestamp & 0x000000FF;
+  pkt[5] = (front_pressure & 0xFF00) >> 8;
+  pkt[6] = front_pressure & 0x00FF;
+  pkt[7] = (rear_pressure & 0xFF00) >> 8;
+  pkt[8] = rear_pressure & 0x00FF;
+  pkt[9] = (fr_temp & 0xFF00) >> 8;
+  pkt[10] = fr_temp & 0x00FF;
+  pkt[11] = (fl_temp & 0xFF00) >> 8;
+  pkt[12] = fl_temp & 0x00FF;
+  pkt[13] = (rr_temp & 0xFF00) >> 8;
+  pkt[14] = rr_temp & 0x00FF;
+  pkt[15] = (rl_temp & 0xFF00) >> 8;
+  pkt[16] = rl_temp & 0x00FF;
   Serial.println(" ; hello Brakes");
 }
 
+//avg_speed(000.00 mph), lat_gps (00. deg), long_gps (000. deg), Lat_g (00000 mG), Lon_g(00000 mG)
 //ID, TIMESTAMP, LAPNO, AVG_SPEED, LAT_GPS, LON_GPS, LAT_G, LON_G
 void testSendGeneral() {
-  ave_speed = rand() % 101;
-  lap_no = (timestamp / 240) + 1;
-  lat_gps = rand() % 500 + 1000;
-  lon_gps =  rand() % 500 + 1000;
-  lat_g = rand() % 4 + 0;
-  lon_g = rand() % 4 + 0; 
+  short ave_speed = rand() % 101;
+  uint8_t lap_no = (timestamp / 240) + 1;
+  int lat_gps = rand() % 500 + 1000;
+  int lon_gps =  rand() % 500 + 1000;
+  short lat_g = rand() % 4 + 0;
+  short lon_g = rand() % 4 + 0;
+  uint8_t DRS = ((timestamp / 50) % 2) + 1; 
   pkt[0] = 2;
   pkt[1] = (timestamp & 0xFF000000) >> 24;
   pkt[2] = (timestamp & 0x00FF0000) >> 16;
@@ -70,6 +85,7 @@ void testSendGeneral() {
   pkt[17] = lat_g & 0x00FF;
   pkt[18] = (lon_g & 0xFF00) >> 8;
   pkt[19] = lon_g & 0x00FF;
+  pkt[20] = DRS;
  
   //radio.write(&arr, sizeof(arr));
   //Serial.print(ave_speed);
@@ -77,21 +93,27 @@ void testSendGeneral() {
   Serial.println(timestamp);
 }
 
+
 void testSendMaxMin() {
   pkt[0] = 3;
-  pkt[1] = (timestamp & 0xFF000000) >> 24;
-  pkt[2] = (timestamp & 0x00FF0000) >> 16;
-  pkt[3] = (timestamp & 0x0000FF00) >> 8;
-  pkt[4] = timestamp & 0x000000FF;
   Serial.println(" ; hello MnM");
 }
 
+//Voltage(00.0V), Current_Draw(0.00A), Logger_temp(000 Celsius)
+//ID, TIMESTAMP, VOLTAGE, CURRENT DRAW, DATA LOGGER TEMP
 void testSendDAQ() {
+  uint8_t voltage = rand() % 140;
+  short current_draw = rand() % 300;
+  uint8_t logger_temp = rand() % 40;
   pkt[0] = 4;
   pkt[1] = (timestamp & 0xFF000000) >> 24;
   pkt[2] = (timestamp & 0x00FF0000) >> 16;
   pkt[3] = (timestamp & 0x0000FF00) >> 8;
   pkt[4] = timestamp & 0x000000FF;
+  pkt[5] = voltage;
+  pkt[6] = (current_draw & 0xFF00) >> 8;
+  pkt[7] = current_draw & 0x00FF;
+  pkt[8] = logger_temp;
   Serial.println(" ; hello DAQ");
 }
 
