@@ -40,22 +40,26 @@ void loop() {
     Serial.print(String(ID) + ", ");
 
     switch (ID){
-      case 0:
+      case 1:
         sus(text);
         break;
-      case 1:
+      case 2:
         brakes(text);
         break;
-      case 2:
+      case 3:
         general(text);
         break;
-      case 3:
+      case 4:
         MnM(text);
         break;
-      case 4:
+      case 5:
         DAQ(text);
         break;
+      default:
+        Serial.print("No ID ");
+        break;
     }
+    delay(500);
   }
 }
 

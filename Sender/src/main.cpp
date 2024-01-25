@@ -25,12 +25,12 @@ short lat_g;
 short lon_g;
 
 void testSendSus() {
-  pkt[0] = 0;
+  pkt[0] = 1;
   Serial.println(" ; hello Sus");
 }
 
 void testSendBrakes(){
-  pkt[0] = 1;
+  pkt[0] = 2;
   Serial.println(" ; hello Brakes");
 }
 
@@ -42,7 +42,7 @@ void testSendGeneral() {
   lon_gps =  rand() % 500 + 1000;
   lat_g = rand() % 4 + 0;
   lon_g = rand() % 4 + 0; 
-  pkt[0] = 2;
+  pkt[0] = 3;
   pkt[1] = (timestamp & 0xFF000000) >> 24;
   pkt[2] = (timestamp & 0x00FF0000) >> 16;
   pkt[3] = (timestamp & 0x0000FF00) >> 8;
@@ -74,12 +74,12 @@ void testSendGeneral() {
 }
 
 void testSendMaxMin() {
-  pkt[0] = 3;
+  pkt[0] = 4;
   Serial.println(" ; hello MnM");
 }
 
 void testSendDAQ() {
-  pkt[0] = 4;
+  pkt[0] = 5;
   Serial.println(" ; hello DAQ");
 }
 
@@ -112,7 +112,8 @@ void setup() {
 void loop() {
   //CAN.events();
   //readCAN(); // for debug purposes
-  short proto = rand() % 4;
+  short proto = (rand() % 4) +1;
+  Serial.println(String(proto) + " rand int");
 
   switch (proto){
     case 0:
@@ -122,7 +123,7 @@ void loop() {
       break;
     case 2:
       testSendGeneral();
-      break;
+      break; 
     case 3:
       testSendMaxMin();
       break;
