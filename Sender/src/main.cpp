@@ -25,12 +25,20 @@ short lat_g;
 short lon_g;
 
 void testSendSus() {
-  pkt[0] = 1;
+  pkt[0] = 0;
+  pkt[1] = (timestamp & 0xFF000000) >> 24;
+  pkt[2] = (timestamp & 0x00FF0000) >> 16;
+  pkt[3] = (timestamp & 0x0000FF00) >> 8;
+  pkt[4] = timestamp & 0x000000FF;
   Serial.println(" ; hello Sus");
 }
 
 void testSendBrakes(){
-  pkt[0] = 2;
+  pkt[0] = 1;
+  pkt[1] = (timestamp & 0xFF000000) >> 24;
+  pkt[2] = (timestamp & 0x00FF0000) >> 16;
+  pkt[3] = (timestamp & 0x0000FF00) >> 8;
+  pkt[4] = timestamp & 0x000000FF;
   Serial.println(" ; hello Brakes");
 }
 
@@ -42,7 +50,7 @@ void testSendGeneral() {
   lon_gps =  rand() % 500 + 1000;
   lat_g = rand() % 4 + 0;
   lon_g = rand() % 4 + 0; 
-  pkt[0] = 3;
+  pkt[0] = 2;
   pkt[1] = (timestamp & 0xFF000000) >> 24;
   pkt[2] = (timestamp & 0x00FF0000) >> 16;
   pkt[3] = (timestamp & 0x0000FF00) >> 8;
@@ -63,23 +71,27 @@ void testSendGeneral() {
   pkt[18] = (lon_g & 0xFF00) >> 8;
   pkt[19] = lon_g & 0x00FF;
  
-  radio.write(&pkt, sizeof(pkt));
-  timestamp++;
   //radio.write(&arr, sizeof(arr));
-  Serial.print(ave_speed);
+  //Serial.print(ave_speed);
   Serial.print(" ; hello General ");
   Serial.println(timestamp);
-
-  delay(1000);
 }
 
 void testSendMaxMin() {
-  pkt[0] = 4;
+  pkt[0] = 3;
+  pkt[1] = (timestamp & 0xFF000000) >> 24;
+  pkt[2] = (timestamp & 0x00FF0000) >> 16;
+  pkt[3] = (timestamp & 0x0000FF00) >> 8;
+  pkt[4] = timestamp & 0x000000FF;
   Serial.println(" ; hello MnM");
 }
 
 void testSendDAQ() {
-  pkt[0] = 5;
+  pkt[0] = 4;
+  pkt[1] = (timestamp & 0xFF000000) >> 24;
+  pkt[2] = (timestamp & 0x00FF0000) >> 16;
+  pkt[3] = (timestamp & 0x0000FF00) >> 8;
+  pkt[4] = timestamp & 0x000000FF;
   Serial.println(" ; hello DAQ");
 }
 
@@ -113,8 +125,9 @@ void loop() {
   //CAN.events();
   //readCAN(); // for debug purposes
   short proto = (rand() % 4) +1;
+  //short proto = 1;
   Serial.println(String(proto) + " rand int");
-
+  
   switch (proto){
     case 0:
       testSendSus();
@@ -131,8 +144,10 @@ void loop() {
       testSendDAQ();
       break;    
   }
+  timestamp++;
+  radio.write(&pkt, sizeof(pkt));
   
-
+  //Serial.println(pkt[0]);
   //unknown protocals
     //testSendMaxMin();
     //testSendSus();
