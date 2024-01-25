@@ -70,7 +70,14 @@ void sus(uint8_t message[32]){
 
 void brakes(uint8_t message[32]){
   int timestamp = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
-  Serial.println("Brakes " + String(timestamp));
+  short front_pressure = message[5] << 8 | message[6];
+  short rear_pressure = message[7] << 8 | message[8];
+  short fr_temp = message[9] << 8 | message[10];
+  short fl_temp = message[11] << 8 | message[12];
+  short rr_temp = message[13] << 8 | message[14];
+  short rl_temp = message[15] << 8 | message[16];
+  Serial.println(String(timestamp) + ", " + String(front_pressure) + ", " + String(rear_pressure) + ", " + 
+    String(fr_temp) + ", " + String(fl_temp) + ", " + String(rr_temp) + ", " + String(rl_temp) + "\n");
 
 }
 
@@ -82,16 +89,22 @@ void general(uint8_t message[32]) {
   int lon_gps = message[12] << 24 | message[13] << 16 | message[14] << 8 | message[15];
   short lat_g = message[16] << 8 | message[17];
   short lon_g = message[18] << 8 | message[19];
+  uint8_t DRS = message[20];
 
   Serial.print(String(timestamp) + ", " + String(lap_no) + ", " + String(avg_speed) + ", " + 
-    String(lat_gps) + ", " + String(lon_gps) + ", " + String(lat_g) + ", " + String(lon_g) + "\n");
+    String(lat_gps) + ", " + String(lon_gps) + ", " + String(lat_g) + ", " + String(lon_g) + ", "  + String(DRS) + "\n");
 }
 
 void MnM(uint8_t message[32]){
   Serial.println("Max and Min ");
 }
 
+
 void DAQ(uint8_t message[32]){
   int timestamp = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
-  Serial.println("DAQ " + String(timestamp));
+  uint8_t voltage = message[5];
+  short current_draw = message[6] << 8 | message[7];
+  uint8_t logger_temp = message[8];
+  Serial.println(String(timestamp) + ", " + String(voltage) + ", " + String(current_draw) + ", " + 
+    String(logger_temp) + "\n");
 }

@@ -35,6 +35,7 @@ void testSendBrakes(){
   short fl_temp = rand() % 24001 + 1000;
   short rr_temp = rand() % 24001 + 1000;
   short rl_temp = rand() % 24001 + 1000;
+  
   pkt[0] = 1;
   pkt[1] = (timestamp & 0xFF000000) >> 24;
   pkt[2] = (timestamp & 0x00FF0000) >> 16;
