@@ -40,26 +40,25 @@ void loop() {
     Serial.print(String(ID) + ", ");
 
     switch (ID){
-      case 1:
+      case 0:
         sus(text);
         break;
-      case 2:
+      case 1:
         brakes(text);
         break;
-      case 3:
+      case 2:
         general(text);
         break;
-      case 4:
+      case 3:
         MnM(text);
         break;
-      case 5:
+      case 4:
         DAQ(text);
         break;
       default:
-        Serial.print("No ID ");
+        Serial.println("No ID ");
         break;
     }
-    delay(500);
   }
 }
 
@@ -90,7 +89,6 @@ void general(uint8_t message[32]) {
 
 void MnM(uint8_t message[32]){
   Serial.println("Max and Min ");
-
 }
 
 void DAQ(uint8_t message[32]){
