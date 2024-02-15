@@ -31,13 +31,6 @@ void resetPacket(uint8_t pkt[32]) {
   }
 }
 
-
-void canSniff(const CAN_message_t &msg) {
-  imuSniff(msg);
-  wheelSniff(msg);
-  dataLogSniff(msg);
-}
-
 void imuSniff(const CAN_message_t &msg) {
   int xAccel = 0;
   int yAccel = 0;
@@ -96,6 +89,8 @@ void imuSniff(const CAN_message_t &msg) {
   Serial.print("Received IMU Data - Message ID: 0x");
   Serial.println(msg.id, HEX);
   Serial.println("************************************");
+  Serial.print("Timestamp: ");
+  Serial.println(currentMillis);
   Serial.print("X Acceleration: ");
   Serial.println(xAccel);
   Serial.print("Y Acceleration: ");
@@ -189,6 +184,8 @@ void wheelSniff(const CAN_message_t &msg) {
   Serial.println("************************************");
 
   // Print received data
+  Serial.print("Timestamp: ");
+  Serial.println(currentMillis);
   Serial.print("Front Left Wheel Speed: ");
   Serial.println(fl_speed);
   Serial.print("Front Left Brake Temperature: ");
@@ -293,6 +290,8 @@ void dataLogSniff(const CAN_message_t &msg) {
   Serial.println("************************************");
 
   // Print received data
+  Serial.print("Timestamp: ");
+  Serial.println(currentMillis);
   Serial.print("DRS: ");
   Serial.println(DRS);
   Serial.print("Steering Angle: ");
@@ -308,6 +307,13 @@ void dataLogSniff(const CAN_message_t &msg) {
   Serial.print("DAQ Current Draw: ");
   Serial.println(daqCurrentDraw);
   Serial.println("************************************");
+}
+
+void canSniff(const CAN_message_t &msg) {
+  imuSniff(msg);
+  wheelSniff(msg);
+  dataLogSniff(msg);
+  Serial.println("canSniff Called");
 }
 
 void testSendSus() {
@@ -420,11 +426,11 @@ void setup() {
   delay(100);
   
   //set baud rate in can2.0
-  //Can.begin();
-  //Can.setBaudRate(1000000);
+  Can.begin();
+  Can.setBaudRate(1000000);
 
 
-	//Can.enableMBInterrupts(); // CAN mailboxes are interrupt-driven, meaning it does stuff when a message appears
+	Can.enableMBInterrupts(); // CAN mailboxes are interrupt-driven, meaning it does stuff when a message appears
   // delay(100);
   Can.onReceive(canSniff);
   
@@ -469,6 +475,9 @@ void loop() {
     //testSendMaxMin();
     //testSendSus();
   */
+  Can.mailboxStatus();
+
+
   delay(50);
   radio.write(&imu_pkt, sizeof(imu_pkt));
   radio.write(&wheel_pkt, sizeof(wheel_pkt));
