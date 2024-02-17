@@ -8,10 +8,10 @@
 #define CSE 10
 #define CE 2
 // Constant Vars declared here
-const byte address[6] = "00001"; // radio reciever address
-uint8_t mailBoxes = 10; // Amount of mail boxes in system
-RF24 radio(CE,CSE);// Radio object with CE,CSN pins given
-FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> Can; // initialize in can2.0 mode 
+const byte address[6] = "00001";               // radio reciever address
+uint8_t mailBoxes = 10;                        // Amount of mail boxes in system
+RF24 radio(CE, CSE);                           // Radio object with CE,CSN pins given
+FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> Can; // initialize in can2.0 mode
 // Function declarations:
 int timestamp = 0;
 String str = String(timestamp);
@@ -28,16 +28,15 @@ int xGyro = -1;
 int yGyro = -1;
 int zGyro = -1;
 
-
 // WHEEL VARIABLES
-//FRONT
+// FRONT
 u_int16_t fl_speed;
 u_int16_t fr_speed;
 short fl_brakeTemp;
 short fr_brakeTemp;
 short fl_ambTemp;
 short fr_ambTemp;
-//BACK
+// BACK
 u_int16_t bl_speed;
 u_int16_t br_speed;
 short bl_brakeTemp;
@@ -56,29 +55,31 @@ int gps_long = -1;
 int batteryVoltage = -1;
 int daqCurrentDraw = -1;
 
-
-//trying to read can for 50 milliseconds then send packet
+// trying to read can for 50 milliseconds then send packet
 unsigned long previousMillis = 0;
 const unsigned long interval = 50;
 
-
-void resetPacket(uint8_t pkt[32]) {
-  for (int i = 0; i < 32; i++) {
+void resetPacket(uint8_t pkt[32])
+{
+  for (int i = 0; i < 32; i++)
+  {
     pkt[i] = 0;
   }
 }
 
-void imuSniff(const CAN_message_t &msg, unsigned long currentMillis) {
+void imuSniff(const CAN_message_t &msg, unsigned long currentMillis)
+{
   imu_pkt[0] = 1;
 
-  //unsigned long currentMillis = millis();
-  imu_pkt[1] = currentMillis & 0xFF;
-  imu_pkt[2] = (currentMillis >> 8) & 0xFF;
-  imu_pkt[3] = (currentMillis >> 16) & 0xFF;
-  imu_pkt[4] = (currentMillis >> 24) & 0xFF;
+  // unsigned long currentMillis = millis();
+  imu_pkt[1] = (currentMillis >> 24) & 0xFF;
+  imu_pkt[2] = (currentMillis >> 16) & 0xFF;
+  imu_pkt[3] = (currentMillis >> 8) & 0xFF;
+  imu_pkt[4] = currentMillis & 0xFF;
 
-  switch(msg.id) {
-    case 0x360:
+  switch (msg.id)
+  {
+  case 0x360:
     xAccel = (msg.buf[0] << 24) | (msg.buf[1] << 16) | (msg.buf[2] << 8) | msg.buf[3];
     imu_pkt[5] = (xAccel >> 24) & 0xFF;
     imu_pkt[6] = (xAccel >> 16) & 0xFF;
@@ -90,7 +91,7 @@ void imuSniff(const CAN_message_t &msg, unsigned long currentMillis) {
     imu_pkt[11] = (yAccel >> 8) & 0xFF;
     imu_pkt[12] = yAccel & 0xFF;
     break;
-    case 0x361:
+  case 0x361:
     zAccel = (msg.buf[0] << 24) | (msg.buf[1] << 16) | (msg.buf[2] << 8) | msg.buf[3];
     imu_pkt[13] = (zAccel >> 24) & 0xFF;
     imu_pkt[14] = (zAccel >> 16) & 0xFF;
@@ -102,7 +103,7 @@ void imuSniff(const CAN_message_t &msg, unsigned long currentMillis) {
     imu_pkt[19] = (xGyro >> 8) & 0xFF;
     imu_pkt[20] = xGyro & 0xFF;
     break;
-    case 0x362:
+  case 0x362:
     yGyro = (msg.buf[0] << 24) | (msg.buf[1] << 16) | (msg.buf[2] << 8) | msg.buf[3];
     imu_pkt[21] = (yGyro >> 24) & 0xFF;
     imu_pkt[22] = (yGyro >> 16) & 0xFF;
@@ -137,17 +138,19 @@ void imuSniff(const CAN_message_t &msg, unsigned long currentMillis) {
   Serial.println("************************************");
 }
 
-void wheelSniff(const CAN_message_t &msg, unsigned long currentMillis) {
+void wheelSniff(const CAN_message_t &msg, unsigned long currentMillis)
+{
   wheel_pkt[0] = 2;
 
-  //unsigned long currentMillis = millis();
-  wheel_pkt[1] = currentMillis & 0xFF;
-  wheel_pkt[2] = (currentMillis >> 8) & 0xFF;
-  wheel_pkt[3] = (currentMillis >> 16) & 0xFF;
-  wheel_pkt[4] = (currentMillis >> 24) & 0xFF;
+  // unsigned long currentMillis = millis();
+  wheel_pkt[1] = (currentMillis >> 24) & 0xFF;
+  wheel_pkt[2] = (currentMillis >> 16) & 0xFF;
+  wheel_pkt[3] = (currentMillis >> 8) & 0xFF;
+  wheel_pkt[4] = currentMillis & 0xFF;
 
-  switch(msg.id) {
-    case 0x363:
+  switch (msg.id)
+  {
+  case 0x363:
     fl_speed = (msg.buf[0]) | msg.buf[1] << 8;
     wheel_pkt[5] = (fl_speed >> 8) & 0xFF;
     wheel_pkt[6] = fl_speed & 0xFF;
@@ -158,7 +161,7 @@ void wheelSniff(const CAN_message_t &msg, unsigned long currentMillis) {
     wheel_pkt[9] = (fl_ambTemp >> 8) & 0xFF;
     wheel_pkt[10] = fl_ambTemp & 0xFF;
     break;
-    case 0x364:
+  case 0x364:
     fr_speed = (msg.buf[0]) | msg.buf[1] << 8;
     wheel_pkt[11] = (fr_speed >> 8) & 0xFF;
     wheel_pkt[12] = fr_speed & 0xFF;
@@ -169,7 +172,7 @@ void wheelSniff(const CAN_message_t &msg, unsigned long currentMillis) {
     wheel_pkt[15] = (fr_ambTemp >> 8) & 0xFF;
     wheel_pkt[16] = fr_ambTemp & 0xFF;
     break;
-    case 0x365:
+  case 0x365:
     bl_speed = (msg.buf[0]) | msg.buf[1] << 8;
     wheel_pkt[17] = (bl_speed >> 8) & 0xFF;
     wheel_pkt[18] = bl_speed & 0xFF;
@@ -180,7 +183,7 @@ void wheelSniff(const CAN_message_t &msg, unsigned long currentMillis) {
     wheel_pkt[21] = (bl_ambTemp >> 8) & 0xFF;
     wheel_pkt[22] = bl_ambTemp & 0xFF;
     break;
-    case 0x366:
+  case 0x366:
     br_speed = (msg.buf[0]) | msg.buf[1] << 8;
     wheel_pkt[23] = (br_speed >> 8) & 0xFF;
     wheel_pkt[24] = br_speed & 0xFF;
@@ -235,23 +238,24 @@ void wheelSniff(const CAN_message_t &msg, unsigned long currentMillis) {
   Serial.println("************************************");
 }
 
-void dataLogSniff(const CAN_message_t &msg, unsigned long currentMillis) {
-  
+void dataLogSniff(const CAN_message_t &msg, unsigned long currentMillis)
+{
 
   daq_pkt[0] = 3;
 
-  //unsigned long currentMillis = millis();
-  daq_pkt[1] = currentMillis & 0xFF;
-  daq_pkt[2] = (currentMillis >> 8) & 0xFF;
-  daq_pkt[3] = (currentMillis >> 16) & 0xFF;
-  daq_pkt[4] = (currentMillis >> 24) & 0xFF;
+  // unsigned long currentMillis = millis();
+  daq_pkt[1] = (currentMillis >> 24) & 0xFF;
+  daq_pkt[2] = (currentMillis >> 16) & 0xFF;
+  daq_pkt[3] = (currentMillis >> 8) & 0xFF;
+  daq_pkt[4] = currentMillis & 0xFF;
 
-  switch(msg.id) {
-    case 0x367:
+  switch (msg.id)
+  {
+  case 0x367:
     DRS = msg.buf[0];
     daq_pkt[5] = DRS ? 1 : 0;
     break;
-    case 0x368:
+  case 0x368:
     steeringAngle = (msg.buf[0]) | msg.buf[1] << 8;
     daq_pkt[6] = (steeringAngle << 8) & 0xFF;
     daq_pkt[7] = steeringAngle & 0xFF;
@@ -265,8 +269,8 @@ void dataLogSniff(const CAN_message_t &msg, unsigned long currentMillis) {
     daq_pkt[12] = (rearBrakePressure << 8) & 0xFF;
     daq_pkt[13] = rearBrakePressure & 0xFF;
     break;
-    case 0x369:
-    gps_lat = (msg.buf[0] << 24) | (msg.buf[1] << 16)  | (msg.buf[2] << 8) | msg.buf[3];
+  case 0x369:
+    gps_lat = (msg.buf[0] << 24) | (msg.buf[1] << 16) | (msg.buf[2] << 8) | msg.buf[3];
     daq_pkt[14] = (gps_lat >> 24) & 0xFF;
     daq_pkt[15] = (gps_lat >> 16) & 0xFF;
     daq_pkt[16] = (gps_lat >> 8) & 0xFF;
@@ -277,7 +281,7 @@ void dataLogSniff(const CAN_message_t &msg, unsigned long currentMillis) {
     daq_pkt[20] = (gps_long >> 8) & 0xFF;
     daq_pkt[21] = gps_long & 0xFF;
     break;
-    case 0x36A:
+  case 0x36A:
     batteryVoltage = (msg.buf[0] << 24) | (msg.buf[1] << 16) | (msg.buf[2] << 8) | msg.buf[3];
     daq_pkt[22] = (batteryVoltage >> 24) & 0xFF;
     daq_pkt[23] = (batteryVoltage >> 16) & 0xFF;
@@ -317,7 +321,8 @@ void dataLogSniff(const CAN_message_t &msg, unsigned long currentMillis) {
   Serial.println("************************************");
 }
 
-void canSniff(const CAN_message_t &msg) {
+void canSniff(const CAN_message_t &msg)
+{
   unsigned long currentmillis = millis();
   imuSniff(msg, currentmillis);
   wheelSniff(msg, currentmillis);
@@ -325,19 +330,19 @@ void canSniff(const CAN_message_t &msg) {
   Serial.println("canSniff Called");
 }
 
-void setup() {
+void setup()
+{
   // CAN Setup
   // Wire.begin();
-  // Baud Rate 
+  // Baud Rate
   Serial.begin(115200);
   delay(100);
-  
-  //set baud rate in can2.0
+
+  // set baud rate in can2.0
   Can.begin();
   Can.setBaudRate(1000000);
 
-
-	Can.enableMBInterrupts(); // CAN mailboxes are interrupt-driven, meaning it does stuff when a message appears
+  Can.enableMBInterrupts(); // CAN mailboxes are interrupt-driven, meaning it does stuff when a message appears
   // delay(100);
   Can.onReceive(canSniff);
 
@@ -345,19 +350,18 @@ void setup() {
   radio.begin();
   radio.stopListening();
   radio.openWritingPipe(address);
-  radio.setPALevel(RF24_PA_MAX); //increase this to increase range
+  radio.setPALevel(RF24_PA_MAX); // increase this to increase range
 }
 
-void loop() {
-  //Can.mailboxStatus();
+void loop()
+{
+  // Can.mailboxStatus();
 
   delay(50);
   radio.write(&imu_pkt, sizeof(imu_pkt));
   radio.write(&wheel_pkt, sizeof(wheel_pkt));
   radio.write(&daq_pkt, sizeof(daq_pkt));
 }
-
-
 
 /*
 // reads CAN
@@ -408,7 +412,7 @@ void testSendBrakes(){
   short fl_temp = rand() % 24001 + 1000;
   short rr_temp = rand() % 24001 + 1000;
   short rl_temp = rand() % 24001 + 1000;
-  
+
   pkt[0] = 1;
   pkt[1] = (timestamp & 0xFF000000) >> 24;
   pkt[2] = (timestamp & 0x00FF0000) >> 16;
@@ -438,7 +442,7 @@ void testSendGeneral() {
   int lon_gps =  rand() % 500 + 1000;
   short lat_g = rand() % 4 + 0;
   short lon_g = rand() % 4 + 0;
-  uint8_t DRS = ((timestamp / 50) % 2) + 1; 
+  uint8_t DRS = ((timestamp / 50) % 2) + 1;
   pkt[0] = 2;
   pkt[1] = (timestamp & 0xFF000000) >> 24;
   pkt[2] = (timestamp & 0x00FF0000) >> 16;
@@ -460,7 +464,7 @@ void testSendGeneral() {
   pkt[18] = (lon_g & 0xFF00) >> 8;
   pkt[19] = lon_g & 0x00FF;
   pkt[20] = DRS;
- 
+
   //radio.write(&arr, sizeof(arr));
   //Serial.print(ave_speed);
   Serial.print(" ; hello General ");
@@ -498,7 +502,7 @@ void testSendDAQ() {
   short proto = (rand() % 4) +1;
   //short proto = 1;
   Serial.println(String(proto) + " rand int");
-  
+
   switch (proto){
     case 0:
       testSendSus();
@@ -507,17 +511,17 @@ void testSendDAQ() {
       break;
     case 2:
       testSendGeneral();
-      break; 
+      break;
     case 3:
       testSendMaxMin();
       break;
     case 4:
       testSendDAQ();
-      break;    
+      break;
   }
   timestamp++;
   radio.write(&pkt, sizeof(pkt));
-  
+
   //Serial.println(pkt[0]);
   //unknown protocals
     //testSendMaxMin();
