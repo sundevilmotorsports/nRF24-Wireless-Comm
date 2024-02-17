@@ -15,10 +15,15 @@ void MnM(uint8_t message[32]);
 void DAQ(uint8_t message[32]);
 
 void imuRead(uint8_t message[32]) {
-  float timestamp = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
+  unsigned long timestamp = (unsigned long) message[1] << 24 | (unsigned long) message[2] << 16 | (unsigned long) message[3] << 8 | (unsigned long) message[4];
   float xAccel = (message[5] << 24) | (message[6] << 16) | (message[7] << 8) | message[8];
   float yAccel = (message[9] << 24) | (message[10] << 16) | (message[11] << 8) | message[12];
   float zAccel = (message[13] << 24) | (message[14] << 16) | (message[15] << 8) | message[16];
+
+
+  float xGyro = (message[17] << 24) | (message[18] << 16) | (message[19] << 8) | message[20];
+  float yGyro = (message[21] << 24) | (message[22] << 16) | (message[23] << 8) | message[24];
+  float zGyro = (message[25] << 24) | (message[26] << 16) | (message[27] << 8) | message[28];
 
   Serial.println("IMU READ: ");
   Serial.print("Timestamp: ");
@@ -29,10 +34,16 @@ void imuRead(uint8_t message[32]) {
   Serial.println(yAccel);
   Serial.print("Z Acceleration: ");
   Serial.println(zAccel);
+  Serial.print("X Gyro; ");
+  Serial.println(xGyro);
+  Serial.print("Y Gyro: ");
+  Serial.println(yGyro);
+  Serial.print("Z Gyro: ");
+  Serial.println(zGyro);
 }
 
 void wheelRead(uint8_t message[32]) {
-  float timestamp = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
+  unsigned long timestamp = (unsigned long) message[1] << 24 | (unsigned long) message[2] << 16 | (unsigned long) message[3] << 8 | (unsigned long) message[4];
   float fl_speed = (message[5] << 8) | message[6];
   float fl_brakeTemp = (message[7] << 8) | message[8];
   float fl_ambTemp = (message[9] << 8) | message[10];
@@ -82,7 +93,7 @@ void wheelRead(uint8_t message[32]) {
 }
 
 void dataLogRead(uint8_t message[32]) {
-  float timestamp = (message[1] << 24) | (message[2] << 16) | (message[3] << 8) | message[4];
+  unsigned long timestamp = (unsigned long) message[1] << 24 | (unsigned long) message[2] << 16 | (unsigned long) message[3] << 8 | (unsigned long) message[4];
   uint8_t drsToggle = message[5];
   float steeringAngle = (message[6] << 8) | message[7];
   float throttleInput = (message[8] << 8) | message[9];
@@ -173,6 +184,7 @@ void loop() {
         dataLogRead(text);
         break;
     }
+    delay(300);
   }
 }
 
