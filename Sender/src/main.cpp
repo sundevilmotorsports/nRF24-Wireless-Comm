@@ -357,7 +357,7 @@ void loop()
 {
   // Can.mailboxStatus();
 
-  delay(50);
+  delay(1000);
   radio.write(&imu_pkt, sizeof(imu_pkt));
   radio.write(&wheel_pkt, sizeof(wheel_pkt));
   radio.write(&daq_pkt, sizeof(daq_pkt));

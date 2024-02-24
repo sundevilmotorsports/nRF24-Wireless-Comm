@@ -8,17 +8,22 @@
 const byte address[6] = "00001"; // radio reciever address
 uint8_t mailBoxes = 10; // Amount of mail boxes in system
 RF24 radio(CE,CSE);// Radio object with CE,CSN pins given// put function declarations here:
+
+
+//Likely going to be deprecated moving forward. Functions still at the bottom for kicks and giggles.
+/*
 void sus(uint8_t message[32]);
 void brakes(uint8_t message[32]);
 void general(uint8_t message[32]);
 void MnM(uint8_t message[32]);
 void DAQ(uint8_t message[32]);
+*/
 
 void imuRead(uint8_t message[32]) {
   unsigned long timestamp = (unsigned long) message[1] << 24 | (unsigned long) message[2] << 16 | (unsigned long) message[3] << 8 | (unsigned long) message[4];
-  float xAccel = (message[5] << 24) | (message[6] << 16) | (message[7] << 8) | message[8];
-  float yAccel = (message[9] << 24) | (message[10] << 16) | (message[11] << 8) | message[12];
-  float zAccel = (message[13] << 24) | (message[14] << 16) | (message[15] << 8) | message[16];
+  float xAccel = ((message[5] << 24) | (message[6] << 16) | (message[7] << 8) | message[8]) / 1000.00; //divide by 1000 to convert mG to Gs
+  float yAccel = ((message[9] << 24) | (message[10] << 16) | (message[11] << 8) | message[12]) / 1000.00;
+  float zAccel = ((message[13] << 24) | (message[14] << 16) | (message[15] << 8) | message[16]) / 1000.00;
 
 
   float xGyro = (message[17] << 24) | (message[18] << 16) | (message[19] << 8) | message[20];
@@ -34,7 +39,7 @@ void imuRead(uint8_t message[32]) {
   Serial.println(yAccel);
   Serial.print("Z Acceleration: ");
   Serial.println(zAccel);
-  Serial.print("X Gyro; ");
+  Serial.print("X Gyro: ");
   Serial.println(xGyro);
   Serial.print("Y Gyro: ");
   Serial.println(yGyro);
@@ -149,7 +154,7 @@ void loop() {
     uint8_t text[32];
     radio.read(&text, sizeof(text));
     uint8_t ID = text[0];
-    Serial.print(String(ID) + ", ");
+    //Serial.print(String(ID) + ", ");
     /*
     switch (ID){
       case 0:
@@ -184,10 +189,10 @@ void loop() {
         dataLogRead(text);
         break;
     }
-    delay(300);
+    delay(1000);
   }
 }
-
+/*
 void sus(uint8_t message[32]){
   int timestamp = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
   Serial.println("Sus " + String(timestamp));
@@ -233,3 +238,4 @@ void DAQ(uint8_t message[32]){
   Serial.println(String(timestamp) + ", " + String(voltage) + ", " + String(current_draw) + ", " + 
     String(logger_temp) + "\n");
 }
+*/
