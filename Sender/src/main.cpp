@@ -116,26 +116,16 @@ void imuSniff(const CAN_message_t &msg, unsigned long currentMillis)
     imu_pkt[28] = zGyro & 0xFF;
     break;
   }
-  Serial.println("************************************");
-  Serial.print("Received IMU Data - Message ID: 0x");
-  Serial.println(msg.id, HEX);
-  Serial.println("************************************");
-  Serial.print("Timestamp (ms): ");
-  Serial.println(currentMillis);
-  Serial.print("X Acceleration: ");
-  Serial.println(xAccel);
-  Serial.print("Y Acceleration: ");
-  Serial.println(yAccel);
-  Serial.print("Z Acceleration: ");
-  Serial.println(zAccel);
-  Serial.print("X Gyro: ");
-  Serial.println(xGyro);
-  Serial.print("Y Gyro: ");
-  Serial.println(yGyro);
-  Serial.print("Z Gyro: ");
-  Serial.println(zGyro);
 
-  Serial.println("************************************");
+  Serial.println(msg.id, HEX);
+  Serial.print("," + currentMillis);
+  Serial.print("," + xAccel);
+  Serial.print("," + yAccel);
+  Serial.print("," + zAccel);
+  Serial.print("," + xGyro);
+  Serial.print("," + yGyro);
+  Serial.print("," + zGyro);
+  Serial.print("\n");
 }
 
 void wheelSniff(const CAN_message_t &msg, unsigned long currentMillis)
@@ -195,47 +185,26 @@ void wheelSniff(const CAN_message_t &msg, unsigned long currentMillis)
     wheel_pkt[28] = br_ambTemp & 0xFF;
     break;
   }
-  Serial.println("************************************");
   Serial.println("Received Wheel Data:");
-  Serial.println("************************************");
-  Serial.print("Message ID: 0x");
-  Serial.println(msg.id, HEX);
-  Serial.println("************************************");
+  Serial.print(msg.id, HEX);
 
   // Print received data
-  Serial.print("Timestamp (ms): ");
-  Serial.println(currentMillis);
-  Serial.print("Front Left Wheel Speed: ");
-  Serial.println(fl_speed);
-  Serial.print("Front Left Brake Temperature: ");
-  Serial.println(fl_brakeTemp);
-  Serial.print("Front Left Ambient Temperature: ");
-  Serial.println(fl_ambTemp);
-  Serial.println("************************************");
+  Serial.print("," + currentMillis);
+  Serial.print("," + fl_speed);
+  Serial.print("," + fl_brakeTemp);
+  Serial.print("," + fl_ambTemp);
 
-  Serial.print("Front Right Wheel Speed: ");
-  Serial.println(fr_speed);
-  Serial.print("Front Right Brake Temperature: ");
-  Serial.println(fr_brakeTemp);
-  Serial.print("Front Right Ambient Temperature: ");
-  Serial.println(fr_ambTemp);
-  Serial.println("************************************");
+  Serial.print("," + fr_speed);
+  Serial.print("," + fr_brakeTemp);
+  Serial.print("," + fr_ambTemp);
 
-  Serial.print("Back Left Wheel Speed: ");
-  Serial.println(bl_speed);
-  Serial.print("Back Left Brake Temperature: ");
-  Serial.println(bl_brakeTemp);
-  Serial.print("Back Left Ambient Temperature: ");
-  Serial.println(bl_ambTemp);
-  Serial.println("************************************");
-
-  Serial.print("Back Right Wheel Speed: ");
-  Serial.println(br_speed);
-  Serial.print("Back Right Brake Temperature: ");
-  Serial.println(br_brakeTemp);
-  Serial.print("Back Right Ambient Temperature: ");
-  Serial.println(br_ambTemp);
-  Serial.println("************************************");
+  Serial.print("," + bl_speed);
+  Serial.print("," + bl_brakeTemp);
+  Serial.print("," + bl_ambTemp);
+  Serial.print("," + br_speed);
+  Serial.print("," + br_brakeTemp);
+  Serial.print("," + br_ambTemp);
+  Serial.print("\n");
 }
 
 void dataLogSniff(const CAN_message_t &msg, unsigned long currentMillis)
@@ -294,31 +263,19 @@ void dataLogSniff(const CAN_message_t &msg, unsigned long currentMillis)
     daq_pkt[29] = batteryVoltage & 0xFF;
     break;
   }
-  Serial.println("************************************");
   Serial.println("Received Data Log:");
-  Serial.println("************************************");
-  Serial.print("Message ID: 0x");
   Serial.println(msg.id, HEX);
-  Serial.println("************************************");
 
   // Print received data
-  Serial.print("Timestamp (ms): ");
-  Serial.println(currentMillis);
-  Serial.print("DRS: ");
-  Serial.println(DRS);
-  Serial.print("Steering Angle: ");
-  Serial.println(steeringAngle);
-  Serial.print("Throttle Input: ");
-  Serial.println(throttleInput);
-  Serial.print("GPS Latitude: ");
-  Serial.println(gps_lat);
-  Serial.print("GPS Longitude: ");
-  Serial.println(gps_long);
-  Serial.print("Battery Voltage: ");
-  Serial.println(batteryVoltage);
-  Serial.print("DAQ Current Draw: ");
-  Serial.println(daqCurrentDraw);
-  Serial.println("************************************");
+  Serial.println("," + currentMillis);
+  Serial.print("," + DRS);
+  Serial.print("," + steeringAngle);
+  Serial.print("," + throttleInput);
+  Serial.print("," + gps_lat);
+  Serial.print("," + gps_long);
+  Serial.print("," + batteryVoltage);
+  Serial.print("," + daqCurrentDraw);
+  Serial.print("\n");
 }
 
 void canSniff(const CAN_message_t &msg)
