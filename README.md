@@ -23,7 +23,7 @@ RF Transmitter ----> Teensy
 
 CE ----> 2
 
-CS ----> 37
+CS ----> 10
 
 SCK ----> 13
 
