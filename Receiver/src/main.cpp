@@ -3,9 +3,10 @@
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
+
 #define CSE 10
 #define CE 1// Constant Vars declared here
-const byte address[6] = "00001"; // radio reciever address
+const byte address[][6] = {"00001", "00002"}; // radio reciever address
 uint8_t mailBoxes = 10; // Amount of mail boxes in system
 RF24 radio(CE,CSE);// Radio object with CE,CSN pins given// put function declarations here:
 
@@ -132,6 +133,64 @@ void dataLogRead(uint8_t message[32]) {
   Serial.println(daqCurrentDraw);
 }
 
+float randomFloat(float min, float max) {
+  return min + (float) (rand()) /( (float) (RAND_MAX/(max-min)));
+}
+
+void imitateRadio(long given_timestamp) {
+  
+  // Randomly generate values for each variable
+  long timestamp = given_timestamp;
+  float fl_speed = randomFloat(0, 100);
+  float fl_brakeTemp = randomFloat(0, 100);
+  float fl_ambTemp = randomFloat(0, 100);
+
+  float fr_speed = randomFloat(0, 100);
+  float fr_brakeTemp = randomFloat(0, 100);
+  float fr_ambTemp = randomFloat(0, 100);
+
+  float bl_speed = randomFloat(0, 100);
+  float bl_brakeTemp = randomFloat(0, 100);
+  float bl_ambTemp = randomFloat(0, 100);
+
+  float br_speed = randomFloat(0, 100);
+  float br_brakeTemp = randomFloat(0, 100);
+  float br_ambTemp = randomFloat(0, 100);
+
+  // Print the values
+  Serial.begin(9600);
+  Serial.println("WHEEL READ: ");
+  Serial.print("Timestamp (s): ");
+  Serial.println(timestamp);
+  Serial.print("Front Left Speed (mph): ");
+  Serial.println(fl_speed);
+  Serial.print("Front Left Brake Temp (C): ");
+  Serial.println(fl_brakeTemp);
+  Serial.print("Front Left Ambient Temperature (C): ");
+  Serial.println(fl_ambTemp);
+
+  Serial.print("Front Right Speed (mph): ");
+  Serial.println(fr_speed);
+  Serial.print("Front Right Brake Temp (C): ");
+  Serial.println(fr_brakeTemp);
+  Serial.print("Front Right Ambient Temperature (C): ");
+  Serial.println(fr_ambTemp);
+
+  Serial.print("Back Left Speed (mph): ");
+  Serial.println(bl_speed);
+  Serial.print("Back Left Brake Temp (C): ");
+  Serial.println(bl_brakeTemp);
+  Serial.print("Back Left Ambient Temperature (C): ");
+  Serial.println(bl_ambTemp);
+
+  Serial.print("Back Right Speed (mph): ");
+  Serial.println(br_speed);
+  Serial.print("Back Right Brake Temp (C): ");
+  Serial.println(br_brakeTemp);
+  Serial.print("Back Right Ambient Temperature (C): ");
+  Serial.println(br_ambTemp);
+}
+
 
 void setup() {
   // CAN Setup
@@ -140,44 +199,26 @@ void setup() {
   Serial.begin(115200);
   delay(100);  // Radio Setup
   radio.begin();
-  radio.openReadingPipe(0, address);
+  radio.openReadingPipe(0, address[0]);
+  radio.openWritingPipe(address[1]);
   radio.setPALevel(RF24_PA_MAX); //increase this to increase range
   radio.startListening();  
   //myCan.enableMBInterrupt(FIFO); // enables FIFO to be interrupt enabled
 }
 
-
+int count = 0;
 void loop() {
   // put your main code here, to run repeatedly:  
   if (radio.available()) {
     //Decoding general packet
+    
     uint8_t text[32];
     radio.read(&text, sizeof(text));
     uint8_t ID = text[0];
+    
     //Serial.print(String(ID) + ", ");
-    /*
-    switch (ID){
-      case 0:
-        sus(text);
-        break;
-      case 1:
-        brakes(text);
-        break;
-      case 2:
-        general(text);
-        break;
-      case 3:
-        MnM(text);
-        break;
-      case 4:
-        DAQ(text);
-        break;
-      default:
-        Serial.println("No ID ");
-        break;
-    }
-    */
-
+    
+    
     switch(ID) {
       case 1:
         imuRead(text);
@@ -189,53 +230,19 @@ void loop() {
         dataLogRead(text);
         break;
     }
-    delay(1000);
+
+    const char message[] = "New lap";
+    radio.stopListening();
+    radio.write(&message, sizeof(message));
+    radio.startListening();
+    
+    //imitateRadio(count++);
+    //delay(1000);
   }
-}
-/*
-void sus(uint8_t message[32]){
-  int timestamp = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
-  Serial.println("Sus " + String(timestamp));
-}
-
-void brakes(uint8_t message[32]){
-  int timestamp = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
-  short front_pressure = message[5] << 8 | message[6];
-  short rear_pressure = message[7] << 8 | message[8];
-  short fr_temp = message[9] << 8 | message[10];
-  short fl_temp = message[11] << 8 | message[12];
-  short rr_temp = message[13] << 8 | message[14];
-  short rl_temp = message[15] << 8 | message[16];
-  Serial.println(String(timestamp) + ", " + String(front_pressure) + ", " + String(rear_pressure) + ", " + 
-    String(fr_temp) + ", " + String(fl_temp) + ", " + String(rr_temp) + ", " + String(rl_temp) + "\n");
-
-}
-
-void general(uint8_t message[32]) {
-  int timestamp = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
-  uint8_t lap_no = message[5];
-  short avg_speed = message[6] << 8 | message[7];
-  int lat_gps = message[8] << 24 | message[9] << 16 | message[10] << 8 | message[11];
-  int lon_gps = message[12] << 24 | message[13] << 16 | message[14] << 8 | message[15];
-  short lat_g = message[16] << 8 | message[17];
-  short lon_g = message[18] << 8 | message[19];
-  uint8_t DRS = message[20];
-
-  Serial.print(String(timestamp) + ", " + String(lap_no) + ", " + String(avg_speed) + ", " + 
-    String(lat_gps) + ", " + String(lon_gps) + ", " + String(lat_g) + ", " + String(lon_g) + ", "  + String(DRS) + "\n");
-}
-
-void MnM(uint8_t message[32]){
-  Serial.println("Max and Min ");
-}
-
-
-void DAQ(uint8_t message[32]){
-  int timestamp = message[1] << 24 | message[2] << 16 | message[3] << 8 | message[4];
-  uint8_t voltage = message[5];
-  short current_draw = message[6] << 8 | message[7];
-  uint8_t logger_temp = message[8];
-  Serial.println(String(timestamp) + ", " + String(voltage) + ", " + String(current_draw) + ", " + 
-    String(logger_temp) + "\n");
+} 
+  /*else {
+    Serial.println("Radio not available");
+  }
+  
 }
 */
