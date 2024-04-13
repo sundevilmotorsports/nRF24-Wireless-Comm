@@ -37,5 +37,5 @@ GND
 
 
 ## Spec Sheet
-![Spec Sheet](https://github.com/sundevilmotorsports/nRF24-Wireless-Comm/blob/main/Receiver/images/specsheet.png?raw=true)
+![Spec Sheet](https://github.com/sundevilmotorsports/nRF24-Wireless-Comm/blob/main/Receiver/images/capture.png?raw=true)
 ![Spec Sheet](https://github.com/sundevilmotorsports/nRF24-Wireless-Comm/blob/main/Receiver/images/Arduino_Leonardo_pinOUT.png?raw=true)
