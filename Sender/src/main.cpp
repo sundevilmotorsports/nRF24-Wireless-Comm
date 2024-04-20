@@ -4,11 +4,20 @@
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
-#include <FlexCAN_T4.h>
+#include "FlexCAN_T4.h"
+#include <stdlib.h>
+#include <iostream>
+using namespace std;
 #define CSE 10
 #define CE 2
 // Constant Vars declared here
-const byte address[6] = "00001";               // radio reciever address
+const byte addressA[6] = "00001";
+const byte addressB[6] = "00002";              // radio reciever address
+
+char text[] = "Bruh you good";
+int ackData = -1;
+int oldAckData = -1;
+
 uint8_t mailBoxes = 10;                        // Amount of mail boxes in system
 RF24 radio(CE, CSE);                           // Radio object with CE,CSN pins given
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> Can; // initialize in can2.0 mode
@@ -55,9 +64,120 @@ int gps_long = -1;
 int batteryVoltage = -1;
 int daqCurrentDraw = -1;
 
+//Received info
+int lap_count;
+CAN_message_t lap_msg; //CAN message decl
+
 // trying to read can for 50 milliseconds then send packet
 unsigned long previousMillis = 0;
 const unsigned long interval = 50;
+
+void dataLogSniff(const CAN_message_t &msg, unsigned long currentMillis);
+void wheelSniff(const CAN_message_t &msg, unsigned long currentMillis);
+void imuSniff(const CAN_message_t &msg, unsigned long currentMillis);
+void sendData(uint8_t pkt[32]);
+void resetPacket(uint8_t pkt[32]);
+
+void canSniff(const CAN_message_t &msg)
+{
+  unsigned long currentmillis = millis();
+  imuSniff(msg, currentmillis);
+  wheelSniff(msg, currentmillis);
+  dataLogSniff(msg, currentmillis);
+  Serial.println("canSniff Called");
+}
+
+void setup()
+{
+  // CAN Setup
+  // Wire.begin();
+  // Baud Rate
+  Serial.begin(9600);
+  delay(100);
+
+  // set baud rate in can2.0
+  Can.begin();
+  Can.setBaudRate(1000000);
+  Can.enableMBInterrupts(); // CAN mailboxes are interrupt-driven, meaning it does stuff when a message appears
+  Can.onReceive(canSniff);
+
+  // Radio Setup
+  radio.begin();
+  radio.stopListening();
+  
+  radio.setPALevel(RF24_PA_MAX); // increase this to increase range
+  //radio.enableAckPayload(); // use this for custom ack payload to express lap count
+  radio.setRetries(5,2);
+  radio.openWritingPipe(addressA);
+
+  //CAN Message Setup
+  lap_msg.id = 0x36B;
+  lap_msg.buf[0] = 0;
+  Can.write(lap_msg);
+  //pkt[0] = 5;
+}
+
+void loop()
+{
+  // Can.mailboxStatus();
+  //bool result;
+  radio.write(&imu_pkt, sizeof(imu_pkt));
+  radio.write(&wheel_pkt, sizeof(wheel_pkt));
+  radio.write(&daq_pkt, sizeof(daq_pkt));
+  
+  //sendData(imu_pkt);
+  //sendData(wheel_pkt);
+  //sendData(daq_pkt);
+  //sendData(pkt);
+  /*
+  uint8_t pkt[32];
+  pkt[0] = 5;
+  result = radio.write(&pkt, sizeof(pkt));
+  if (result) {
+        if (radio.isAckPayloadAvailable()) {
+          radio.read(&ackData, sizeof(ackData));
+          if (ackData != oldAckData) {
+            oldAckData = ackData;
+            lap_msg.buf[0] = ackData;
+            lap_msg.id = 0x36B;
+            Can.write(lap_msg);
+            Serial.println("Wrote to CAN with new Lap Count");
+          }
+        } else {
+          Serial.println("Acknowledge but no data");
+        }
+  } else {
+    Serial.println("  Tx failed");
+  }
+  */
+  delay(50);
+}
+
+void sendData(uint8_t pkt[32]) {
+  bool result;
+  pkt[0] = 5;
+  result = radio.write(&pkt, sizeof(pkt));
+
+  //Serial.print("Data Sent");
+  if (result) {
+    /*
+        if (radio.isAckPayloadAvailable()) {
+          radio.read(&ackData, sizeof(ackData));
+          if (ackData != oldAckData) {
+            oldAckData = ackData;
+            lap_msg.buf[0] = ackData;
+            lap_msg.id = 0x36B;
+            Can.write(lap_msg);
+            Serial.println("Wrote to CAN with new Lap Count");
+          }
+        } else {
+          Serial.println("Acknowledge but no data");
+        }
+        */
+  } else {
+    Serial.println("  Tx failed");
+  }
+}
 
 void resetPacket(uint8_t pkt[32])
 {
@@ -116,26 +236,24 @@ void imuSniff(const CAN_message_t &msg, unsigned long currentMillis)
     imu_pkt[28] = zGyro & 0xFF;
     break;
   }
-  Serial.println("************************************");
-  Serial.print("Received IMU Data - Message ID: 0x");
-  Serial.println(msg.id, HEX);
-  Serial.println("************************************");
-  Serial.print("Timestamp (ms): ");
-  Serial.println(currentMillis);
-  Serial.print("X Acceleration: ");
-  Serial.println(xAccel);
-  Serial.print("Y Acceleration: ");
-  Serial.println(yAccel);
-  Serial.print("Z Acceleration: ");
-  Serial.println(zAccel);
-  Serial.print("X Gyro: ");
-  Serial.println(xGyro);
-  Serial.print("Y Gyro: ");
-  Serial.println(yGyro);
-  Serial.print("Z Gyro: ");
-  Serial.println(zGyro);
 
-  Serial.println("************************************");
+  Serial.println(msg.id, HEX);
+  Serial.print(",");
+  Serial.print(currentMillis);
+  Serial.print(",");
+  Serial.print(xAccel);
+  Serial.print(",");
+  Serial.print(yAccel);
+  Serial.print(",");
+  Serial.print(zAccel);
+  Serial.print(",");
+  Serial.print(xGyro);
+  Serial.print(",");
+  Serial.print(yGyro);
+  Serial.print(",");
+  Serial.print(zGyro);
+  Serial.print("\n");
+
 }
 
 void wheelSniff(const CAN_message_t &msg, unsigned long currentMillis)
@@ -195,47 +313,40 @@ void wheelSniff(const CAN_message_t &msg, unsigned long currentMillis)
     wheel_pkt[28] = br_ambTemp & 0xFF;
     break;
   }
-  Serial.println("************************************");
   Serial.println("Received Wheel Data:");
-  Serial.println("************************************");
-  Serial.print("Message ID: 0x");
-  Serial.println(msg.id, HEX);
-  Serial.println("************************************");
+  Serial.print(msg.id, HEX);
 
   // Print received data
-  Serial.print("Timestamp (ms): ");
-  Serial.println(currentMillis);
-  Serial.print("Front Left Wheel Speed: ");
-  Serial.println(fl_speed);
-  Serial.print("Front Left Brake Temperature: ");
-  Serial.println(fl_brakeTemp);
-  Serial.print("Front Left Ambient Temperature: ");
-  Serial.println(fl_ambTemp);
-  Serial.println("************************************");
+  Serial.print(",");
+  Serial.print(currentMillis);
+  Serial.print(",");
+  Serial.print(fl_speed);
+  Serial.print(",");
+  Serial.print(fl_brakeTemp);
+  Serial.print(",");
+  Serial.print(fl_ambTemp);
 
-  Serial.print("Front Right Wheel Speed: ");
-  Serial.println(fr_speed);
-  Serial.print("Front Right Brake Temperature: ");
-  Serial.println(fr_brakeTemp);
-  Serial.print("Front Right Ambient Temperature: ");
-  Serial.println(fr_ambTemp);
-  Serial.println("************************************");
+  Serial.print(",");
+  Serial.print(fr_speed);
+  Serial.print(",");
+  Serial.print(fr_brakeTemp);
+  Serial.print(",");
+  Serial.print(fr_ambTemp);
 
-  Serial.print("Back Left Wheel Speed: ");
-  Serial.println(bl_speed);
-  Serial.print("Back Left Brake Temperature: ");
-  Serial.println(bl_brakeTemp);
-  Serial.print("Back Left Ambient Temperature: ");
-  Serial.println(bl_ambTemp);
-  Serial.println("************************************");
+  Serial.print(",");
+  Serial.print(bl_speed);
+  Serial.print(",");
+  Serial.print(bl_brakeTemp);
+  Serial.print(",");
+  Serial.print(bl_ambTemp);
+  Serial.print(",");
+  Serial.print(br_speed);
+  Serial.print(",");
+  Serial.print(br_brakeTemp);
+  Serial.print(",");
+  Serial.print(br_ambTemp);
+  Serial.print("\n");
 
-  Serial.print("Back Right Wheel Speed: ");
-  Serial.println(br_speed);
-  Serial.print("Back Right Brake Temperature: ");
-  Serial.println(br_brakeTemp);
-  Serial.print("Back Right Ambient Temperature: ");
-  Serial.println(br_ambTemp);
-  Serial.println("************************************");
 }
 
 void dataLogSniff(const CAN_message_t &msg, unsigned long currentMillis)
@@ -294,236 +405,24 @@ void dataLogSniff(const CAN_message_t &msg, unsigned long currentMillis)
     daq_pkt[29] = batteryVoltage & 0xFF;
     break;
   }
-  Serial.println("************************************");
   Serial.println("Received Data Log:");
-  Serial.println("************************************");
-  Serial.print("Message ID: 0x");
   Serial.println(msg.id, HEX);
-  Serial.println("************************************");
 
-  // Print received data
-  Serial.print("Timestamp (ms): ");
-  Serial.println(currentMillis);
-  Serial.print("DRS: ");
-  Serial.println(DRS);
-  Serial.print("Steering Angle: ");
-  Serial.println(steeringAngle);
-  Serial.print("Throttle Input: ");
-  Serial.println(throttleInput);
-  Serial.print("GPS Latitude: ");
-  Serial.println(gps_lat);
-  Serial.print("GPS Longitude: ");
-  Serial.println(gps_long);
-  Serial.print("Battery Voltage: ");
-  Serial.println(batteryVoltage);
-  Serial.print("DAQ Current Draw: ");
-  Serial.println(daqCurrentDraw);
-  Serial.println("************************************");
+  Serial.print(",");
+  Serial.print(currentMillis);
+  Serial.print(",");
+  Serial.print(DRS);
+  Serial.print(",");
+  Serial.print(steeringAngle);
+  Serial.print(",");
+  Serial.print(throttleInput);
+  Serial.print(",");
+  Serial.print(gps_lat);
+  Serial.print(",");
+  Serial.print(gps_long);
+  Serial.print(",");
+  Serial.print(batteryVoltage);
+  Serial.print(",");
+  Serial.print(daqCurrentDraw);
+  Serial.print("\n");
 }
-
-void canSniff(const CAN_message_t &msg)
-{
-  unsigned long currentmillis = millis();
-  imuSniff(msg, currentmillis);
-  wheelSniff(msg, currentmillis);
-  dataLogSniff(msg, currentmillis);
-  Serial.println("canSniff Called");
-}
-
-void setup()
-{
-  // CAN Setup
-  // Wire.begin();
-  // Baud Rate
-  Serial.begin(115200);
-  delay(100);
-
-  // set baud rate in can2.0
-  Can.begin();
-  Can.setBaudRate(1000000);
-
-  Can.enableMBInterrupts(); // CAN mailboxes are interrupt-driven, meaning it does stuff when a message appears
-  // delay(100);
-  Can.onReceive(canSniff);
-
-  // Radio Setup
-  radio.begin();
-  radio.stopListening();
-  radio.openWritingPipe(address);
-  radio.setPALevel(RF24_PA_MAX); // increase this to increase range
-}
-
-void loop()
-{
-  // Can.mailboxStatus();
-
-  delay(1000);
-  radio.write(&imu_pkt, sizeof(imu_pkt));
-  radio.write(&wheel_pkt, sizeof(wheel_pkt));
-  radio.write(&daq_pkt, sizeof(daq_pkt));
-}
-
-/*
-// reads CAN
-void readCAN(CAN_message_t msg){
-  Serial.print("MB: "); Serial.print(msg.mb);
-  Serial.print(" ID: "); Serial.print(msg.id, HEX);
-  for ( uint8_t i = 0; i < msg.len; i++ ) {
-    Serial.print(msg.buf[i], HEX); Serial.print(" ");
-  } Serial.println();
-}
-void transmitCAN(CAN_message_t msg){
-  uint8_t bufferData[32];
-  memcpy(bufferData,&msg.buf,sizeof(bufferData));
-  radio.write(&bufferData,sizeof(bufferData));
-}
-*/
-/*
-void canSniff(const CAN_message_t &msg) {
-  Serial.print("MB "); Serial.print(msg.mb);
-  Serial.print("  OVERRUN: "); Serial.print(msg.flags.overrun);
-  Serial.print("  LEN: "); Serial.print(msg.len);
-  Serial.print(" EXT: "); Serial.print(msg.flags.extended);
-  Serial.print(" TS: "); Serial.print(msg.timestamp);
-  Serial.print(" ID: "); Serial.print(msg.id, HEX);
-  Serial.print(" Buffer: ");
-  for ( uint8_t i = 0; i < msg.len; i++ ) {
-    Serial.print(msg.buf[i], HEX); Serial.print(" ");
-  } Serial.println();
-}
-
-
-
-
-void testSendSus() {
-  pkt[0] = 0;
-  pkt[1] = (timestamp & 0xFF000000) >> 24;
-  pkt[2] = (timestamp & 0x00FF0000) >> 16;
-  pkt[3] = (timestamp & 0x0000FF00) >> 8;
-  pkt[4] = timestamp & 0x000000FF;
-  Serial.println(" ; hello Sus");
-}
-//brake_pressure (00.000 (Bar)), brake temp (000.00 celsius)
-//ID, TIMESTAMP, FRONT_BRAKEPRESSURE, REAR_BRAKEPRESSURE, FL_BRAKE_TEMP, FR_BRAKE_TEMP, RR_BRAKE_TEMP, RL_BRAKE_TEMP
-void testSendBrakes(){
-  short front_pressure = rand() % 10001;
-  short rear_pressure = rand() % 10001;
-  short fr_temp = rand() % 24001 + 1000;
-  short fl_temp = rand() % 24001 + 1000;
-  short rr_temp = rand() % 24001 + 1000;
-  short rl_temp = rand() % 24001 + 1000;
-
-  pkt[0] = 1;
-  pkt[1] = (timestamp & 0xFF000000) >> 24;
-  pkt[2] = (timestamp & 0x00FF0000) >> 16;
-  pkt[3] = (timestamp & 0x0000FF00) >> 8;
-  pkt[4] = timestamp & 0x000000FF;
-  pkt[5] = (front_pressure & 0xFF00) >> 8;
-  pkt[6] = front_pressure & 0x00FF;
-  pkt[7] = (rear_pressure & 0xFF00) >> 8;
-  pkt[8] = rear_pressure & 0x00FF;
-  pkt[9] = (fr_temp & 0xFF00) >> 8;
-  pkt[10] = fr_temp & 0x00FF;
-  pkt[11] = (fl_temp & 0xFF00) >> 8;
-  pkt[12] = fl_temp & 0x00FF;
-  pkt[13] = (rr_temp & 0xFF00) >> 8;
-  pkt[14] = rr_temp & 0x00FF;
-  pkt[15] = (rl_temp & 0xFF00) >> 8;
-  pkt[16] = rl_temp & 0x00FF;
-  Serial.println(" ; hello Brakes");
-}
-
-//avg_speed(000.00 mph), lat_gps (00. deg), long_gps (000. deg), Lat_g (00000 mG), Lon_g(00000 mG)
-//ID, TIMESTAMP, LAPNO, AVG_SPEED, LAT_GPS, LON_GPS, LAT_G, LON_G
-void testSendGeneral() {
-  short ave_speed = rand() % 101;
-  uint8_t lap_no = (timestamp / 240) + 1;
-  int lat_gps = rand() % 500 + 1000;
-  int lon_gps =  rand() % 500 + 1000;
-  short lat_g = rand() % 4 + 0;
-  short lon_g = rand() % 4 + 0;
-  uint8_t DRS = ((timestamp / 50) % 2) + 1;
-  pkt[0] = 2;
-  pkt[1] = (timestamp & 0xFF000000) >> 24;
-  pkt[2] = (timestamp & 0x00FF0000) >> 16;
-  pkt[3] = (timestamp & 0x0000FF00) >> 8;
-  pkt[4] = timestamp & 0x000000FF;
-  pkt[5] = lap_no;
-  pkt[6] = (ave_speed & 0xFF00) >> 8;
-  pkt[7] = ave_speed & 0x00FF;
-  pkt[8] = (lat_gps & 0xFF000000) >> 24;
-  pkt[9] = (lat_gps & 0x00FF0000) >> 16;
-  pkt[10] = (lat_gps & 0x0000FF00) >> 8;
-  pkt[11] = lat_gps & 0x000000FF;
-  pkt[12] = (lon_gps & 0xFF000000) >> 24;
-  pkt[13] = (lon_gps & 0x00FF0000) >> 16;
-  pkt[14] = (lon_gps & 0x0000FF00) >> 8;
-  pkt[15] = lon_gps & 0x000000FF;
-  pkt[16] = (lat_g & 0xFF00) >> 8;
-  pkt[17] = lat_g & 0x00FF;
-  pkt[18] = (lon_g & 0xFF00) >> 8;
-  pkt[19] = lon_g & 0x00FF;
-  pkt[20] = DRS;
-
-  //radio.write(&arr, sizeof(arr));
-  //Serial.print(ave_speed);
-  Serial.print(" ; hello General ");
-  Serial.println(timestamp);
-}
-
-
-void testSendMaxMin() {
-  pkt[0] = 3;
-  Serial.println(" ; hello MnM");
-}
-
-//Voltage(00.0V), Current_Draw(0.00A), Logger_temp(000 Celsius)
-//ID, TIMESTAMP, VOLTAGE, CURRENT DRAW, DATA LOGGER TEMP
-void testSendDAQ() {
-  uint8_t voltage = rand() % 140;
-  short current_draw = rand() % 300;
-  uint8_t logger_temp = rand() % 40;
-  pkt[0] = 4;
-  pkt[1] = (timestamp & 0xFF000000) >> 24;
-  pkt[2] = (timestamp & 0x00FF0000) >> 16;
-  pkt[3] = (timestamp & 0x0000FF00) >> 8;
-  pkt[4] = timestamp & 0x000000FF;
-  pkt[5] = voltage;
-  pkt[6] = (current_draw & 0xFF00) >> 8;
-  pkt[7] = current_draw & 0x00FF;
-  pkt[8] = logger_temp;
-  Serial.println(" ; hello DAQ");
-}
-*/
-
-/*
-  //CAN.events();
-  //readCAN(); // for debug purposes
-  short proto = (rand() % 4) +1;
-  //short proto = 1;
-  Serial.println(String(proto) + " rand int");
-
-  switch (proto){
-    case 0:
-      testSendSus();
-    case 1:
-      testSendBrakes();
-      break;
-    case 2:
-      testSendGeneral();
-      break;
-    case 3:
-      testSendMaxMin();
-      break;
-    case 4:
-      testSendDAQ();
-      break;
-  }
-  timestamp++;
-  radio.write(&pkt, sizeof(pkt));
-
-  //Serial.println(pkt[0]);
-  //unknown protocals
-    //testSendMaxMin();
-    //testSendSus();
-  */
