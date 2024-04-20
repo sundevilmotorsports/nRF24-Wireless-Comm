@@ -7,11 +7,11 @@ CE ----> 1 (TX1)
 
 CS ----> 10
 
-SCK ----> ICSP
+SCK ----> ICSP (SCK)
 
-SDO ----> ICSP
+SDO ----> ICSP (MISO)
 
-SDI ----> ICSP
+SDI ----> ICSP (MOSI)
 
 GND
 
@@ -23,7 +23,7 @@ RF Transmitter ----> Teensy
 
 CE ----> 2
 
-CS ----> 37
+CS ----> 10
 
 SCK ----> 13
 
@@ -37,4 +37,5 @@ GND
 
 
 ## Spec Sheet
-![Spec Sheet](https://github.com/sundevilmotorsports/nRF24-Wireless-Comm/blob/main/Receiver/images/specsheet.png?raw=true)
+![Spec Sheet](https://github.com/sundevilmotorsports/nRF24-Wireless-Comm/blob/main/Receiver/images/Capture.PNG?raw=true)
+![Spec Sheet](https://github.com/sundevilmotorsports/nRF24-Wireless-Comm/blob/main/Receiver/images/Arduino_Leonardo_pinOUT.png?raw=true)
